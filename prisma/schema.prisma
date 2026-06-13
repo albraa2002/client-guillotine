@@ -1,0 +1,233 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String?
+  email          String   @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?
+  role           String @default("OWNER")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizations  OrganizationMember[]
+  analyzedClients Client[]           @relation("ClientAnalysis")
+  activities     Activity[]
+  notifications  Notification[]
+  sessions       Session[]
+  accounts       Account[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     OrganizationMember[]
+  clients     Client[]
+  reports     Report[]
+  inviteCodes InviteCode[]
+
+  @@index([slug])
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String @default("MEMBER")
+  joinedAt       DateTime         @default(now())
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model InviteCode {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  organizationId String
+  email          String?
+  role           String @default("MEMBER")
+  used           Boolean  @default(false)
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([organizationId])
+}
+
+model Client {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  name                 String
+  email                String?
+  company              String?
+  industry             String?
+  status               String @default("ACTIVE")
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  // Financial Inputs
+  monthlyRetainer      Float        @default(0)
+  estimatedMonthlyHours Float       @default(0)
+  averageEmployeeHourCost Float     @default(0)
+  numberOfEmployees    Int          @default(1)
+
+  // Operational Inputs
+  numberOfRevisions    Int          @default(0)
+  numberOfMeetings     Int          @default(0)
+  teamStressLevel      Int          @default(5)
+  urgencyLevel         Int          @default(5)
+  communicationChaos   Int          @default(5)
+  scopeCreepFrequency  Int          @default(5)
+  paymentDelays        Int          @default(0)
+  additionalNotes      String?
+
+  // Calculated Metrics (cached)
+  netProfit            Float?
+  grossMargin          Float?
+  realHourlyProfit     Float?
+  revenueLeakage       Float?
+  hiddenOperationalCost Float?
+  teamDrainScore       Float?
+  revisionBurden       Float?
+  meetingToxicity      Float?
+  scopeCreepIndex      Float?
+  emotionalCost        Float?
+  burnoutRisk          Float?
+  toxicClientScore     Float?
+  clientRiskScore      Float?
+  futureLossPrediction Float?
+  retentionViability   Float?
+  upsellProbability    Float?
+  verdict              String?
+  lastAnalyzed         DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  analyzedBy   User?        @relation("ClientAnalysis", fields: [analyzedById], references: [id])
+  analyzedById String?
+  reports      Report[]
+
+  @@index([organizationId])
+  @@index([verdict])
+  @@index([toxicClientScore])
+}
+
+model Report {
+  id             String   @id @default(cuid())
+  organizationId String
+  clientId       String?
+  title          String
+  type           String   @default("EXECUTIVE")
+  data           Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isShared       Boolean  @default(false)
+  shareToken     String?  @unique
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([shareToken])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  details   String  
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String  
+  type      String   @default("INFO")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String?
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String?
+  changes        Json?
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([createdAt])
+}

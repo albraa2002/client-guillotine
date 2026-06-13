@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  * {
+    @apply border-gray-200 dark:border-noir-700;
+  }
+  body {
+    @apply bg-white text-gray-900 dark:bg-noir-950 dark:text-noir-100 font-sans antialiased;
+  }
+  :root {
+    --radius: 0.5rem;
+  }
+  [dir="rtl"] {
+    @apply text-right;
+  }
+  [dir="rtl"] body {
+    font-family: 'Noto Kufi Arabic', 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 dark:bg-glass-gradient backdrop-blur-xl border border-gray-200 dark:border-white/5 rounded-xl shadow-sm dark:shadow-2xl;
+  }
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:border-guillotine-500/30 dark:hover:border-guillotine-500/30;
+  }
+  .kpi-card {
+    @apply glass-card p-6 transition-all duration-300;
+  }
+  .kpi-value {
+    @apply text-3xl font-bold font-mono tracking-tight;
+  }
+  .kpi-label {
+    @apply text-sm text-gray-500 dark:text-noir-400 font-medium uppercase tracking-wider;
+  }
+  .verdict-badge {
+    @apply px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest;
+  }
+  .verdict-terminate {
+    @apply verdict-badge bg-red-50 dark:bg-profit-negative/20 text-profit-negative border border-profit-negative/30;
+  }
+  .verdict-reprice {
+    @apply verdict-badge bg-amber-50 dark:bg-profit-warning/20 text-profit-warning border border-profit-warning/30;
+  }
+  .verdict-keep {
+    @apply verdict-badge bg-emerald-50 dark:bg-profit-positive/20 text-profit-positive border border-profit-positive/30;
+  }
+  .section-title {
+    @apply text-lg font-semibold text-gray-800 dark:text-noir-200 tracking-wide;
+  }
+  .data-row {
+    @apply flex justify-between items-center py-3 border-b border-gray-100 dark:border-noir-800 last:border-0;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.gray.300') transparent;
+  }
+  .dark .scrollbar-thin {
+    scrollbar-color: theme('colors.noir.700') transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.gray.300');
+    border-radius: 2px;
+  }
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.noir.700');
+  }
+}
